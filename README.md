@@ -2,6 +2,8 @@
 
 OpenClaw memory plugin that connects to an external [AgentMemo](https://github.com/yxjsxy/agentMemo) HTTP service for semantic memory search, auto-recall, and auto-capture.
 
+Canonical default port is **8790** (`http://localhost:8790`). Do not use port 8000.
+
 ## Why AgentMemo?
 
 Unlike the built-in memory system (which embeds local Markdown files), AgentMemo provides:
@@ -30,7 +32,21 @@ cd agentMemo
 python -m agentmemo.server
 ```
 
-### 2. Configure the plugin in `openclaw.json`
+### 2. Probe the backend (recommended on first run)
+
+ClawHub first-run used to hang when AgentMemo was down or the fetch never returned. Run the doctor script (5s timeout, exit 1 on failure):
+
+```bash
+npm run doctor
+# or: node scripts/doctor.mjs
+# or: node scripts/doctor.mjs http://localhost:8790/health
+```
+
+If the probe fails, start AgentMemo first: https://github.com/yxjsxy/agentMemo
+
+### 3. Configure the plugin in `openclaw.json`
+
+See `examples/openclaw.json` for a ready-to-copy local config.
 
 **Minimal (local server, no auth):**
 
@@ -92,13 +108,28 @@ python -m agentmemo.server
 | Add memory    | `POST /memories/`     | POST   |
 | Health probe  | `GET /health`         | GET    |
 
+All three plugin fetches use `AbortSignal.timeout` with `FETCH_TIMEOUT_MS = 5000` so a hung AgentMemo process cannot stall OpenClaw.
+
 ## How It Works
 
 ### Auto-Recall
-Before each agent turn, the plugin searches AgentMemo for memories relevant to the user's prompt and injects them into the system context as `<relevant-memories>` block.
+
+Before each agent turn, the plugin searches AgentMemo for memories relevant to the user's prompt and injects them into the system context as an untrusted `<relevant-memories>` block. Injected memory text is HTML-escaped (`&`, `<`, `>`, `"`, `'`) so stored content cannot break out of the wrapper or act as instructions.
 
 ### Auto-Capture
+
 After each conversation turn, if `autoCapture: true`, the plugin analyzes user messages for memorable content (preferences, facts, decisions) and stores them to AgentMemo automatically.
+
+English triggers (remember / prefer / always / my X is / decided / email) sit alongside Chinese cues for bilingual users:
+
+- `记住|记得|别忘|记一下`
+- `我(喜欢|不喜欢|讨厌|习惯|经常|从不|总是)`
+- `我(决定|打算|以后用|改用)`
+- `我的.{0,8}(是|叫)`
+
+## Hardware notes (16GB Mac mini)
+
+On a **16GB Mac mini**, do **not** coreside a 14B LLM with AgentMemo. The memory service needs RAM headroom for embeddings and search; a 14B model on the same machine will contend for memory and can hang or OOM health/search requests. Run the LLM elsewhere, or use a smaller local model.
 
 ## Background
 
@@ -106,4 +137,4 @@ This plugin was refactored from a core PR ([openclaw/openclaw#54712](https://git
 
 ## License
 
-MIT
+MIT — Copyright 2026 Karl Yang (yxjsxy)

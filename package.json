@@ -1,9 +1,12 @@
 {
   "name": "@openclaw/memory-agentmemo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenClaw memory plugin backed by AgentMemo HTTP service — semantic search, auto-recall, and auto-capture",
   "type": "module",
   "main": "index.ts",
+  "scripts": {
+    "doctor": "node scripts/doctor.mjs"
+  },
   "dependencies": {},
   "openclaw": {
     "extensions": [

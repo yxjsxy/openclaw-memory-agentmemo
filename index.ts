@@ -42,6 +42,8 @@ type AgentMemoAddResponse = {
 // HTTP Client
 // ============================================================================
 
+const FETCH_TIMEOUT_MS = 5000;
+
 class AgentMemoClient {
   private readonly baseUrl: string;
   private readonly apiKey: string | undefined;
@@ -71,6 +73,7 @@ class AgentMemoClient {
       method: "POST",
       headers: this.buildHeaders(true),
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -98,6 +101,7 @@ class AgentMemoClient {
       method: "POST",
       headers: this.buildHeaders(true),
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -116,6 +120,7 @@ class AgentMemoClient {
       const res = await fetch(`${this.baseUrl}/health`, {
         method: "GET",
         headers: this.buildHeaders(),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       });
       return res.ok;
     } catch {
@@ -135,6 +140,10 @@ const MEMORY_TRIGGERS = [
   /my\s+\w+\s+is|is\s+my/i,
   /decided|will use|going to/i,
   /[\w.-]+@[\w.-]+\.\w+/,
+  /记住|记得|别忘|记一下/,
+  /我(喜欢|不喜欢|讨厌|习惯|经常|从不|总是)/,
+  /我(决定|打算|以后用|改用)/,
+  /我的.{0,8}(是|叫)/,
 ];
 
 function shouldCapture(text: string, maxChars = 500): boolean {
