@@ -1,0 +1,11 @@
+{
+  "plugins": {
+    "memory-agentmemo": {
+      "serverUrl": "http://localhost:8790",
+      "apiKey": "${AGENTMEMO_API_KEY}",
+      "userId": "openclaw",
+      "autoRecall": true,
+      "autoCapture": false
+    }
+  }
+}
